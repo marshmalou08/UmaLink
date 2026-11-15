@@ -9,7 +9,7 @@ $items = [
     'reports'   => ['reports/index.php', 'Reports'],
 ];
 ?>
-<nav id="sidebarMenu" class="col-md-2 app-sidebar collapse d-md-block">
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 app-sidebar collapse d-md-block">
   <ul class="nav flex-column">
     <li class="nav-heading">Main</li>
     <?php foreach ($items as $key => [$path, $label]): ?>

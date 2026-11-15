@@ -72,66 +72,37 @@ $cards = [
     ['Harvest Records', $counts['harvests'], 'harvest/index.php', 'accent-tan'],
 ];
 
-$chartData = [
-    'status' => ['labels' => array_column($byStatus, 'label'), 'values' => array_map('intval', array_column($byStatus, 'total'))],
-    'crop'   => ['labels' => array_column($byCrop, 'label'), 'values' => array_map('floatval', array_column($byCrop, 'total'))],
-];
-$extraScripts = ['assets/vendor/chart.umd.js'];
-$inlineScript = '<script>const chartData = ' . json_encode($chartData, JSON_HEX_TAG | JSON_HEX_AMP) . ';
-(function () {
-  var colors = ["#606c38", "#dda15e", "#bc6c25", "#283618", "#8a9a5b", "#e9c496"];
-  new Chart(document.getElementById("statusChart"), {
-    type: "doughnut",
-    data: { labels: chartData.status.labels, datasets: [{ data: chartData.status.values, backgroundColor: colors, borderColor: "#fefae0" }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
-  });
-  new Chart(document.getElementById("cropChart"), {
-    type: "bar",
-    data: { labels: chartData.crop.labels, datasets: [{ label: "Kilograms harvested", data: chartData.crop.values, backgroundColor: "#606c38" }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-  });
-})();</script>';
+// Presentation helpers only: bar widths and percentage shares are derived from the values above.
+$statusTotal = array_sum(array_map('intval', array_column($byStatus, 'total')));
+$cropMax = $byCrop ? max(array_map('floatval', array_column($byCrop, 'total'))) : 0;
 
 require __DIR__ . '/includes/header.php';
 ?>
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+<div class="masthead">
   <div>
-    <h1 class="h3 mb-0">Dashboard</h1>
-    <small class="text-muted">Welcome, <?= e($user['full_name']) ?>. Here is the current state of your records.</small>
+    <h1 class="h3 mb-1">Dashboard</h1>
+    <small class="text-muted">Welcome, <?= e($user['full_name']) ?>. Here are your records.</small>
   </div>
 </div>
 
-<div class="row g-3 mb-3">
+<div class="ledger" role="list" aria-label="Record totals">
   <?php foreach ($cards as [$label, $value, $link, $accent]): ?>
-    <div class="col-6 col-lg">
-      <a href="<?= e(url($link)) ?>" class="text-decoration-none">
-        <div class="card stat-card <?= e($accent) ?> h-100">
-          <div class="card-body">
-            <div class="stat-label"><?= e($label) ?></div>
-            <div class="stat-value"><?= number_format((int) $value) ?></div>
-          </div>
-        </div>
-      </a>
-    </div>
+    <a href="<?= e(url($link)) ?>" class="ledger-item" role="listitem">
+      <span class="ledger-label"><?= e($label) ?></span>
+      <span class="ledger-value"><?= number_format((int) $value) ?></span>
+      <span class="ledger-more">Open records &rarr;</span>
+    </a>
   <?php endforeach; ?>
 </div>
 
-<div class="row g-3 mb-3">
-  <div class="col-md-6">
-    <div class="card stat-card accent-forest h-100">
-      <div class="card-body">
-        <div class="stat-label">Total Harvested Quantity</div>
-        <div class="stat-value"><?= number_format((float) $totals['total_kg'], 2) ?> kg</div>
-      </div>
-    </div>
+<div class="harvest-band">
+  <div class="harvest-figure">
+    <span class="harvest-label">Total Harvested Quantity</span>
+    <span class="harvest-value"><?= number_format((float) $totals['total_kg'], 2) ?><small>kg</small></span>
   </div>
-  <div class="col-md-6">
-    <div class="card stat-card accent-rust h-100">
-      <div class="card-body">
-        <div class="stat-label">Estimated Harvest Value</div>
-        <div class="stat-value"><?= e(money($totals['total_value'])) ?></div>
-      </div>
-    </div>
+  <div class="harvest-figure">
+    <span class="harvest-label">Estimated Harvest Value</span>
+    <span class="harvest-value"><?= e(money($totals['total_value'])) ?></span>
   </div>
 </div>
 
@@ -140,22 +111,40 @@ require __DIR__ . '/includes/header.php';
     <div class="card h-100">
       <div class="card-header">Plantings by Status</div>
       <div class="card-body">
-        <div class="chart-box"><canvas id="statusChart" aria-label="Plantings by status chart" role="img"></canvas></div>
-        <table class="table table-sm mt-3">
-          <tbody>
-          <?php foreach ($byStatus as $s): ?>
-            <tr><td><?= e($s['label']) ?></td><td class="text-end fw-bold"><?= (int) $s['total'] ?></td></tr>
+        <div class="status-bar" role="img" aria-label="Share of plantings by status">
+          <?php foreach ($byStatus as $i => $s): ?>
+            <?php if ($statusTotal > 0 && (int) $s['total'] > 0): ?>
+              <span class="seg-<?= ($i % 6) + 1 ?>" style="width: <?= round(((int) $s['total'] / $statusTotal) * 100, 2) ?>%"></span>
+            <?php endif; ?>
           <?php endforeach; ?>
-          </tbody>
-        </table>
+        </div>
+        <ul class="status-list">
+          <?php foreach ($byStatus as $i => $s): ?>
+            <li>
+              <span class="swatch seg-<?= ($i % 6) + 1 ?>"></span>
+              <span><?= e($s['label']) ?></span>
+              <span class="count"><?= (int) $s['total'] ?></span>
+              <span class="share"><?= $statusTotal > 0 ? round(((int) $s['total'] / $statusTotal) * 100) : 0 ?>%</span>
+            </li>
+          <?php endforeach; ?>
+        </ul>
       </div>
     </div>
   </div>
   <div class="col-lg-7">
     <div class="card h-100">
-      <div class="card-header">Harvested Quantity by Crop (Top 6)</div>
+      <div class="card-header">Harvested Quantity by Crop <span class="text-muted fw-normal fs-6">(Top 6)</span></div>
       <div class="card-body">
-        <div class="chart-box"><canvas id="cropChart" aria-label="Harvested quantity by crop chart" role="img"></canvas></div>
+        <ul class="crop-bars">
+          <?php foreach ($byCrop as $c): ?>
+            <li>
+              <span class="name"><?= e($c['label']) ?></span>
+              <span class="track"><span class="fill" style="width: <?= $cropMax > 0 ? round(((float) $c['total'] / $cropMax) * 100, 2) : 0 ?>%"></span></span>
+              <span class="qty"><?= number_format((float) $c['total'], 2) ?> kg</span>
+            </li>
+          <?php endforeach; ?>
+          <?php if (!$byCrop): ?><li class="text-muted">No harvest records yet.</li><?php endif; ?>
+        </ul>
       </div>
     </div>
   </div>
@@ -168,22 +157,16 @@ require __DIR__ . '/includes/header.php';
         Recent Planting Records
         <a href="<?= e(url('planting/index.php')) ?>" class="btn btn-sm btn-accent">View all</a>
       </div>
-      <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle">
-          <thead><tr><th>Date</th><th>Farm</th><th>Crop</th><th>Status</th></tr></thead>
-          <tbody>
-          <?php foreach ($recentPlantings as $r): ?>
-            <tr>
-              <td><?= e(fmt_date($r['planting_date'])) ?></td>
-              <td><?= e($r['farm_name']) ?></td>
-              <td><?= e($r['crop_name']) ?> <small class="text-muted">(<?= e($r['variety']) ?>)</small></td>
-              <td><span class="badge <?= (int) $r['status_id'] === 2 ? 'badge-status-harvested' : 'badge-status-growing' ?>"><?= e($r['status_description']) ?></span></td>
-            </tr>
-          <?php endforeach; ?>
-          <?php if (!$recentPlantings): ?><tr><td colspan="4" class="text-center text-muted">No planting records yet.</td></tr><?php endif; ?>
-          </tbody>
-        </table>
-      </div>
+      <ol class="log">
+        <?php foreach ($recentPlantings as $r): ?>
+          <li>
+            <span class="when"><?= e(fmt_date($r['planting_date'])) ?></span>
+            <span class="what"><strong><?= e($r['farm_name']) ?></strong><span><?= e($r['crop_name']) ?> (<?= e($r['variety']) ?>)</span></span>
+            <span class="tail"><span class="badge <?= (int) $r['status_id'] === 2 ? 'badge-status-harvested' : 'badge-status-growing' ?>"><?= e($r['status_description']) ?></span></span>
+          </li>
+        <?php endforeach; ?>
+        <?php if (!$recentPlantings): ?><li class="empty">No planting records yet.</li><?php endif; ?>
+      </ol>
     </div>
   </div>
   <div class="col-xl-6">
@@ -192,23 +175,16 @@ require __DIR__ . '/includes/header.php';
         Recent Harvest Records
         <a href="<?= e(url('harvest/index.php')) ?>" class="btn btn-sm btn-accent">View all</a>
       </div>
-      <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle">
-          <thead><tr><th>Date</th><th>Farm</th><th>Crop</th><th class="text-end">Qty (kg)</th><th>Remarks</th></tr></thead>
-          <tbody>
-          <?php foreach ($recentHarvests as $r): ?>
-            <tr>
-              <td><?= e(fmt_date($r['harvest_date'])) ?></td>
-              <td><?= e($r['farm_name']) ?></td>
-              <td><?= e($r['crop_name']) ?></td>
-              <td class="text-end"><?= number_format((float) $r['quantity_kg'], 2) ?></td>
-              <td><?= e($r['remark_description']) ?></td>
-            </tr>
-          <?php endforeach; ?>
-          <?php if (!$recentHarvests): ?><tr><td colspan="5" class="text-center text-muted">No harvest records yet.</td></tr><?php endif; ?>
-          </tbody>
-        </table>
-      </div>
+      <ol class="log">
+        <?php foreach ($recentHarvests as $r): ?>
+          <li>
+            <span class="when"><?= e(fmt_date($r['harvest_date'])) ?></span>
+            <span class="what"><strong><?= e($r['farm_name']) ?></strong><span><?= e($r['crop_name']) ?> &middot; <?= e($r['remark_description']) ?></span></span>
+            <span class="tail"><span class="qty"><?= number_format((float) $r['quantity_kg'], 2) ?></span>kg</span>
+          </li>
+        <?php endforeach; ?>
+        <?php if (!$recentHarvests): ?><li class="empty">No harvest records yet.</li><?php endif; ?>
+      </ol>
     </div>
   </div>
 </div>

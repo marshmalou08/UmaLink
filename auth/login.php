@@ -55,13 +55,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" href="<?= e(url('assets/css/style.css')) ?>">
 </head>
 <body>
-<div class="login-wrap">
-  <div class="card login-card shadow">
-    <div class="card-body p-4">
-      <div class="text-center mb-4">
-        <div class="brand"><?= e(APP_NAME) ?></div>
-        <div class="text-muted"><?= e(APP_SUBTITLE) ?></div>
-      </div>
+<div class="login-shell">
+  <aside class="login-aside">
+    <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V9"/><path d="M12 14c-4 0-6-2-6-6 4 0 6 2 6 6z"/><path d="M12 11c0-4 2-6 6-6 0 4-2 6-6 6z"/></svg>
+    <div class="brand"><?= e(APP_NAME) ?></div>
+    <div class="sub"><?= e(APP_SUBTITLE) ?></div>
+    <p class="tagline">Simplifying farm management, one record at a time.</p>
+    <svg class="rows" viewBox="0 0 400 120" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+      <path d="M0 20 C100 0 300 40 400 18"/><path d="M0 38 C100 18 300 58 400 36"/><path d="M0 56 C100 36 300 76 400 54"/>
+      <path d="M0 74 C100 54 300 94 400 72"/><path d="M0 92 C100 72 300 112 400 90"/><path d="M0 110 C100 90 300 130 400 108"/>
+    </svg>
+  </aside>
+  <main class="login-main">
+    <div class="login-card">
+      <h1 class="h3">Sign in</h1>
       <?php if ($error): ?>
         <div class="alert alert-danger" role="alert"><?= e($error) ?></div>
       <?php endif; ?>
@@ -82,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="btn btn-primary w-100">Log In</button>
       </form>
     </div>
-  </div>
+  </main>
 </div>
 <script src="<?= e(url('assets/vendor/bootstrap.bundle.min.js')) ?>"></script>
 <script src="<?= e(url('assets/js/app.js')) ?>"></script>

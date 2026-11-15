@@ -84,8 +84,6 @@ INSERT INTO planting (farm_id,crop_id,planting_date,area_planted,seed_quantity,e
 (11,6,'2026-03-26',1.00,15.00,'2026-08-23',1),
 (12,7,'2026-03-29',1.10,20.00,'2026-07-17',1),
 (13,8,'2026-04-01',1.20,25.00,'2026-11-27',1),
-(14,9,'2026-04-04',1.30,30.00,'2026-08-02',1),
-(15,10,'2026-04-07',1.40,35.00,'2026-07-01',1);
 
 INSERT INTO harvest (planting_id,harvest_date,quantity_kg,selling_price_per_kg,grade_id,remark_id) VALUES
 (1,'2026-05-07',900.00,22.00,1,1),
