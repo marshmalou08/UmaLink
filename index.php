@@ -1,4 +1,5 @@
 <?php
+//test
 // Dashboard - main page after login. Every figure comes from the database.
 require_once __DIR__ . '/includes/functions.php';
 require_login();
